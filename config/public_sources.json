@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0.0",
+  "policy": "Only sources approved for public redistribution by Geomacro may be enabled in this repository.",
+  "sources": [
+    {
+      "source_id": "gdelt_events",
+      "publisher": "GDELT Project",
+      "dataset": "GDELT Events 2.x",
+      "enabled": true,
+      "commercial_use": true,
+      "redistribution": true,
+      "raw_storage": true,
+      "public_runner_mode": "rolling_source_artifact",
+      "source_url": "https://www.gdeltproject.org/"
+    },
+    {
+      "source_id": "world_bank_open_data",
+      "publisher": "World Bank Group",
+      "dataset": "World Development Indicators",
+      "enabled": false,
+      "commercial_use": true,
+      "redistribution": true,
+      "raw_storage": true,
+      "public_runner_mode": "planned",
+      "source_url": "https://api.worldbank.org/v2"
+    },
+    {
+      "source_id": "world_bank_wgi_political_stability",
+      "publisher": "World Bank Group",
+      "dataset": "Worldwide Governance Indicators - Political Stability",
+      "enabled": false,
+      "commercial_use": true,
+      "redistribution": true,
+      "raw_storage": true,
+      "public_runner_mode": "planned",
+      "source_url": "https://api.worldbank.org/v2/source/3"
+    },
+    {
+      "source_id": "ucdp_ged",
+      "publisher": "Uppsala Conflict Data Program",
+      "dataset": "Georeferenced Event Dataset",
+      "enabled": false,
+      "commercial_use": true,
+      "redistribution": true,
+      "raw_storage": true,
+      "public_runner_mode": "planned_tokenless_bulk_only",
+      "source_url": "https://ucdp.uu.se/downloads/"
+    },
+    {
+      "source_id": "ucdp_dyadic",
+      "publisher": "Uppsala Conflict Data Program",
+      "dataset": "Dyadic Dataset",
+      "enabled": false,
+      "commercial_use": true,
+      "redistribution": true,
+      "raw_storage": true,
+      "public_runner_mode": "planned_tokenless_bulk_only",
+      "source_url": "https://ucdp.uu.se/downloads/"
+    },
+    {
+      "source_id": "usgs_minerals",
+      "publisher": "U.S. Geological Survey",
+      "dataset": "Mineral Commodity and Historical Statistics",
+      "enabled": false,
+      "commercial_use": true,
+      "redistribution": true,
+      "raw_storage": true,
+      "public_runner_mode": "planned",
+      "source_url": "https://www.usgs.gov/centers/national-minerals-information-center"
+    }
+  ],
+  "explicitly_excluded_source_families": [
+    "bgs_world_mineral_statistics",
+    "bgs_world_mineral_statistics_archive",
+    "fred",
+    "coinmetrics_community",
+    "ofac_sanctions",
+    "unsc_sanctions"
+  ]
+}

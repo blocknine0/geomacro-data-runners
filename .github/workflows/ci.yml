@@ -1,0 +1,51 @@
+name: Public Runner CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile public runner code
+        run: python -m compileall -q src tests
+
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Reject obvious private material
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|p12|sqlite|db)$)' >/dev/null; then
+            echo "Forbidden credential/database-shaped file is tracked"
+            exit 1
+          fi
+
+          if grep -RInE \
+            '(SUPABASE_SERVICE_ROLE_KEY|HISTORICAL_SUPABASE_DB_URL|UCDP_API_TOKEN|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY)' \
+            src config tests; then
+            echo "Private credential identifier/material detected in public runner source"
+            exit 1
+          fi
+
+          echo "PUBLIC_BOUNDARY_STATIC_CHECK_OK"

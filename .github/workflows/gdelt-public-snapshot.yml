@@ -1,0 +1,74 @@
+name: Public GDELT Snapshot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7 */2 * * *"
+  push:
+    branches:
+      - main
+    paths:
+      - "src/gdelt_snapshot.py"
+      - "tests/test_gdelt_snapshot.py"
+      - "config/public_sources.json"
+      - ".github/workflows/gdelt-public-snapshot.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: geomacro-public-gdelt-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Build latest GDELT source artifact
+        run: python src/gdelt_snapshot.py --output dist/gdelt
+
+      - name: Verify emitted checksum
+        working-directory: dist/gdelt
+        run: sha256sum --check gdelt-latest.sha256
+
+      - name: Publish rolling public release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! gh release view public-data-latest >/dev/null 2>&1; then
+            gh release create public-data-latest \
+              --title "Geomacro Public Data - Latest" \
+              --notes "Rolling, checksum-bound artifacts from redistribution-approved public sources. This release is not a production database and contains no Geomacro private credentials."
+          fi
+
+          gh release upload public-data-latest \
+            "dist/gdelt/gdelt-latest.zip#GDELT latest Events export" \
+            "dist/gdelt/gdelt-latest.manifest.json#GDELT provenance manifest" \
+            "dist/gdelt/gdelt-latest.sha256#GDELT SHA-256 checksum" \
+            --clobber
+
+      - name: Summary
+        shell: bash
+        run: |
+          echo "### Public GDELT snapshot" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Source: GDELT Events 2.x" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Production DB write: no" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Private credential required: no" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Output: rolling release tag public-data-latest" >> "$GITHUB_STEP_SUMMARY"
