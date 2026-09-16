@@ -23,7 +23,7 @@ concurrency:
 jobs:
   snapshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -37,12 +37,12 @@ jobs:
       - name: Unit tests
         run: python -m unittest discover -s tests -v
 
-      - name: Build latest GDELT source artifact
-        run: python src/gdelt_snapshot.py --output dist/gdelt
+      - name: Build latest 12-export GDELT source window
+        run: python src/gdelt_snapshot.py --output dist/gdelt --count 12
 
       - name: Verify emitted checksum
         working-directory: dist/gdelt
-        run: sha256sum --check gdelt-latest.sha256
+        run: sha256sum --check gdelt-window.sha256
 
       - name: Publish rolling public release assets
         env:
@@ -58,17 +58,18 @@ jobs:
           fi
 
           gh release upload public-data-latest \
-            "dist/gdelt/gdelt-latest.zip#GDELT latest Events export" \
-            "dist/gdelt/gdelt-latest.manifest.json#GDELT provenance manifest" \
-            "dist/gdelt/gdelt-latest.sha256#GDELT SHA-256 checksum" \
+            "dist/gdelt/gdelt-window.zip#GDELT latest 12-export source window" \
+            "dist/gdelt/gdelt-window.manifest.json#GDELT window provenance manifest" \
+            "dist/gdelt/gdelt-window.sha256#GDELT window SHA-256 checksum" \
             --clobber
 
       - name: Summary
         shell: bash
         run: |
-          echo "### Public GDELT snapshot" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Public GDELT source window" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "- Source: GDELT Events 2.x" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Window: latest 12 x 15-minute exports" >> "$GITHUB_STEP_SUMMARY"
           echo "- Production DB write: no" >> "$GITHUB_STEP_SUMMARY"
           echo "- Private credential required: no" >> "$GITHUB_STEP_SUMMARY"
           echo "- Output: rolling release tag public-data-latest" >> "$GITHUB_STEP_SUMMARY"

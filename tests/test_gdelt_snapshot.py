@@ -6,24 +6,39 @@ from pathlib import Path
 from src.gdelt_snapshot import (
     SnapshotError,
     canonical_export_url,
-    parse_lastupdate,
+    parse_master_tail,
     validate_export_zip,
 )
 
 
 class GdeltSnapshotTests(unittest.TestCase):
-    def test_parse_lastupdate_selects_events_export(self):
-        text = "\n".join(
-            [
-                "123 abc http://data.gdeltproject.org/gdeltv2/20260916153000.export.CSV.zip",
-                "456 def http://data.gdeltproject.org/gdeltv2/20260916153000.mentions.CSV.zip",
-                "789 ghi http://data.gdeltproject.org/gdeltv2/20260916153000.gkg.csv.zip",
-            ]
-        )
+    def test_parse_master_tail_selects_latest_events_window(self):
+        lines = []
+        for minute in (0, 15, 30, 45):
+            stamp = f"2026091615{minute:02d}00"
+            lines.extend(
+                [
+                    f"123 abc http://data.gdeltproject.org/gdeltv2/{stamp}.export.CSV.zip",
+                    f"456 def http://data.gdeltproject.org/gdeltv2/{stamp}.mentions.CSV.zip",
+                    f"789 ghi http://data.gdeltproject.org/gdeltv2/{stamp}.gkg.csv.zip",
+                ]
+            )
+
+        selected = parse_master_tail("\n".join(lines), 3)
+        self.assertEqual(len(selected), 3)
         self.assertEqual(
-            parse_lastupdate(text),
-            "https://data.gdeltproject.org/gdeltv2/20260916153000.export.CSV.zip",
+            selected[-1],
+            "https://data.gdeltproject.org/gdeltv2/20260916154500.export.CSV.zip",
         )
+        self.assertTrue(all(url.endswith(".export.CSV.zip") for url in selected))
+
+    def test_parse_master_tail_fails_when_window_is_incomplete(self):
+        text = (
+            "123 abc "
+            "https://data.gdeltproject.org/gdeltv2/20260916154500.export.CSV.zip"
+        )
+        with self.assertRaises(SnapshotError):
+            parse_master_tail(text, 2)
 
     def test_export_url_rejects_untrusted_host(self):
         with self.assertRaises(SnapshotError):
