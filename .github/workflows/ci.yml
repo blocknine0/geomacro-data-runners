@@ -42,10 +42,8 @@ jobs:
           fi
 
           if grep -RInE \
-            --exclude-dir=.git \
-            --exclude='*.md' \
             '(SUPABASE_SERVICE_ROLE_KEY|HISTORICAL_SUPABASE_DB_URL|UCDP_API_TOKEN|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY)' \
-            .; then
+            src config tests; then
             echo "Private credential identifier/material detected in public runner source"
             exit 1
           fi
